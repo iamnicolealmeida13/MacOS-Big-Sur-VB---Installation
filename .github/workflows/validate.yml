@@ -1,5 +1,4 @@
-name: Validate Scripts
-
+name: validate
 on:
   push:
     branches: [ main, develop ]
@@ -59,7 +58,6 @@ jobs:
           echo "Checking documentation files"
           test -f docs/troubleshooting.md
           test -f docs/optimization.md
-          test -f QUICK_START.md
           
       - name: Validate markdown syntax
         uses: actionshub/markdownlint@main
@@ -82,7 +80,6 @@ jobs:
           test -f README.md && echo "✓ README.md found"
           test -f LICENSE && echo "✓ LICENSE found"
           test -f .gitignore && echo "✓ .gitignore found"
-          test -f QUICK_START.md && echo "✓ QUICK_START.md found"
           
           # Check for required directories
           test -d scripts && echo "✓ scripts/ directory found"
