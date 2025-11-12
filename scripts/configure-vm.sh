@@ -1,99 +1,106 @@
-name: Validate Scripts
+#!/bin/bash
+# ============================================
+# macOS VirtualBox Configuration Script
+# For Linux hosts
+# ============================================
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+echo
+echo "========================================"
+echo "  macOS VirtualBox Configuration Script"
+echo "========================================"
+echo
 
-jobs:
-  validate-windows-script:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Check if VirtualBox paths are correct
-        shell: cmd
-        run: |
-          echo Checking Windows script syntax...
-          type scripts\configure-vm.bat
-          
-      - name: Validate batch script syntax
-        shell: cmd
-        run: |
-          echo Script validation passed
+# --- Check if running as root ---
+if [[ $EUID -ne 0 ]]; then
+    echo "ERROR: This script must be run as root (sudo)!"
+    echo "Usage: sudo ./configure-vm.sh"
+    echo
+    exit 1
+fi
 
-  validate-linux-script:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Check script permissions
-        run: |
-          ls -la scripts/
-          
-      - name: Validate shell script syntax
-        run: |
-          bash -n scripts/configure-vm.sh
-          echo "Script syntax is valid"
-      
-      - name: Check shellcheck
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y shellcheck
-          shellcheck scripts/configure-vm.sh || true
+# --- Check if VBoxManage is available ---
+if ! command -v VBoxManage &>/dev/null; then
+    echo "ERROR: VBoxManage not found!"
+    echo "Please install VirtualBox before running this script."
+    echo
+    exit 1
+fi
 
-  validate-documentation:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Check markdown files
-        run: |
-          echo "Checking README.md"
-          test -f README.md
-          
-          echo "Checking documentation files"
-          test -f docs/troubleshooting.md
-          test -f docs/optimization.md
-          test -f QUICK_START.md
-          
-      - name: Validate markdown syntax
-        uses: actionshub/markdownlint@main
-        with:
-          path: "*.md"
-          ignore: node_modules
-        continue-on-error: true
+# --- Get VM name from user ---
+read -rp "Enter your Virtual Machine name: " VM_NAME
 
-  check-structure:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      
-      - name: Verify repository structure
-        run: |
-          echo "Checking repository structure..."
-          
-          # Check for required files
-          test -f README.md && echo "✓ README.md found"
-          test -f LICENSE && echo "✓ LICENSE found"
-          test -f .gitignore && echo "✓ .gitignore found"
-          test -f QUICK_START.md && echo "✓ QUICK_START.md found"
-          
-          # Check for required directories
-          test -d scripts && echo "✓ scripts/ directory found"
-          test -d docs && echo "✓ docs/ directory found"
-          
-          # Check for script files
-          test -f scripts/configure-vm.bat && echo "✓ configure-vm.bat found"
-          test -f scripts/configure-vm.sh && echo "✓ configure-vm.sh found"
-          
-          # Check for documentation
-          test -f docs/troubleshooting.md && echo "✓ troubleshooting.md found"
-          test -f docs/optimization.md && echo "✓ optimization.md found"
-          
-          echo "Repository structure is valid!"
+if [[ -z "$VM_NAME" ]]; then
+    echo "ERROR: VM name cannot be empty!"
+    echo
+    exit 1
+fi
+
+echo
+echo "Configuring VM: $VM_NAME"
+echo
+read -n1 -r -p "Make sure VirtualBox is completely closed. Press any key to continue..." key
+echo
+
+# --- Step 1: Configure CPU ID ---
+echo
+echo "[1/5] Configuring CPU ID..."
+VBoxManage modifyvm "$VM_NAME" --cpuidset 00000001 000106e5 00100800 0098e3fd bfebfbff || {
+    echo "ERROR: Failed to configure CPU ID."
+    exit 1
+}
+echo "Done!"
+
+# --- Step 2: Set System Product ---
+echo
+echo "[2/5] Setting System Product (iMac19,1)..."
+VBoxManage setextradata "$VM_NAME" "VBoxInternal/Devices/efi/0/Config/DmiSystemProduct" "iMac19,1" || {
+    echo "ERROR: Failed to set System Product."
+    exit 1
+}
+echo "Done!"
+
+# --- Step 3: Set System Version ---
+echo
+echo "[3/5] Setting System Version..."
+VBoxManage setextradata "$VM_NAME" "VBoxInternal/Devices/efi/0/Config/DmiSystemVersion" "1.0" || {
+    echo "ERROR: Failed to set System Version."
+    exit 1
+}
+echo "Done!"
+
+# --- Step 4: Set Board Product ---
+echo
+echo "[4/5] Setting Board Product..."
+VBoxManage setextradata "$VM_NAME" "VBoxInternal/Devices/efi/0/Config/DmiBoardProduct" "Mac-AA95B1DDAB278B95" || {
+    echo "ERROR: Failed to set Board Product."
+    exit 1
+}
+echo "Done!"
+
+# --- Step 5: Configure SMC Device ---
+echo
+echo "[5/5] Configuring SMC Device..."
+VBoxManage setextradata "$VM_NAME" "VBoxInternal/Devices/smc/0/Config/DeviceKey" \
+"ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc" || {
+    echo "ERROR: Failed to set SMC DeviceKey."
+    exit 1
+}
+VBoxManage setextradata "$VM_NAME" "VBoxInternal/Devices/smc/0/Config/GetKeyFromRealSMC" 1 || {
+    echo "ERROR: Failed to configure GetKeyFromRealSMC."
+    exit 1
+}
+echo "Done!"
+
+# --- Completion message ---
+echo
+echo "========================================"
+echo "  Configuration completed successfully!"
+echo "========================================"
+echo
+echo "You can now start your VM: $VM_NAME"
+echo
+echo "Recommended VirtualBox settings:"
+echo " - System > Processor: 2+ CPUs"
+echo " - Display > Video Memory: 128 MB"
+echo " - Storage: Attach macOS ISO"
+echo

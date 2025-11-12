@@ -67,6 +67,7 @@ Before starting the VM, configure these settings in VirtualBox:
 1. Close VirtualBox completly
 2. Open Terminal 
 3. Navigate to the [*scripts*]() folder <!-- Colocar link da pasta -->
+4. Run `configure-vm.sh`
 4. Run `chmod +x configure-vm-sh && ./configure-vm.sh`
 5. Enter your VMname when prompted
 
