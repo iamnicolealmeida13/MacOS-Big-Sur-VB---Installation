@@ -59,14 +59,14 @@ Before starting the VM, configure these settings in VirtualBox:
 #### **Windows Users**:
 1. Close VirtualBox completly
 2. Open Command Prompt as Administrator
-3. Navigate to the [*scripts*](https://github.com/iamnicolealmeida13/MacOS-Big-Sur-VB---Installation/tree/main/scripts) folder
+3. Navigate to the [*scripts*](https://github.com/iamnicolealmeida13/MacOS-Big-Sur-VB---Installation/blob/main/scripts/configure-vm.bat) folder
 4. Run `configure-vm.bat`
 5. Enter your VMname when prompted 
 
 #### **Linux/Mac Users**:
 1. Close VirtualBox completly
 2. Open Terminal 
-3. Navigate to the [*scripts*](https://github.com/iamnicolealmeida13/MacOS-Big-Sur-VB---Installation/tree/main/scripts) folder 
+3. Navigate to the [*scripts*](https://github.com/iamnicolealmeida13/MacOS-Big-Sur-VB---Installation/blob/main/scripts/configure-vm.sh) folder 
 4. Run `configure-vm.sh`
 4. Run `chmod +x configure-vm-sh && ./configure-vm.sh`
 5. Enter your VMname when prompted
