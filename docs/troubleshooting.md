@@ -7,8 +7,8 @@
 
 ## **Black screen on boot**
 
-Try changing Graphics Controller to VBoxVGA or VBoxSVGA.
-Increase Video Memory to 128MB.
+- Try changing Graphics Controller to VBoxVGA or VBoxSVGA.
+- Increase Video Memory to 128MB.
 
 ## **Installation is very slow**
 
